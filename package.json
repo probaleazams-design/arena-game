@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 {
   "name": "arena-game",
   "version": "1.0.0",
@@ -9,4 +10,17 @@
     "express": "^4.18.2",
     "socket.io": "^4.7.5"
   }
+=======
+{
+  "name": "arena-game",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.5"
+  }
+>>>>>>> 04574cc9ba400a2271bd4efd6ac4556ae7d38114
 }
