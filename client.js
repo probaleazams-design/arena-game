@@ -772,14 +772,18 @@ function drawMiniMap() {
 function updateLeaderboard() {
   if (!leaderboardEl) return;
 
-  const html = leaderboardData
-    .slice(0, 10)
-    .map((p, i) => {
-      return `<div>${i + 1}. ${p.name} - ${p.score}</div>`;
-    })
-    .join('');
+  const me = state.players.find(p => p.id === playerId);
 
-  leaderboardEl.innerHTML = html;
+  if (!me) {
+    leaderboardEl.innerHTML = '';
+    return;
+  }
+
+  leaderboardEl.innerHTML = `
+    <div>In game</div>
+    <div>Score: ${me.score || 0}</div>
+    <div>Length: ${me.length || 10}</div>
+  `;
 }
 
 function render(now = performance.now()) {
