@@ -781,6 +781,8 @@ function render(now = performance.now()) {
   }
 
   ctx.fillStyle = '#0a0a0f';
+  W = window.innerWidth;
+  H = window.innerHeight;
   ctx.fillRect(0, 0, W, H);
 
   drawGrid();
