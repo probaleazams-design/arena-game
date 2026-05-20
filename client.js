@@ -327,17 +327,14 @@ joinBtn.addEventListener('click', () => {
 });
 
 socket.on('connect', () => {
-  statusEl.textContent = 'Connected';
   joinBtn.disabled = false;
 });
 
 socket.on('connect_error', () => {
-  statusEl.textContent = 'Connection error';
   joinBtn.disabled = false;
 });
 
 socket.on('disconnect', () => {
-  statusEl.textContent = 'Disconnected';
   joinBox.style.display = 'grid';
   joined = false;
   playerId = null;
@@ -349,7 +346,6 @@ socket.on('init', (data) => {
   worldSize = data.worldSize || worldSize;
   joined = true;
   joinBox.style.display = 'none';
-  statusEl.textContent = 'In game';
   joinBtn.disabled = false;
   camera.x = worldSize / 2;
   camera.y = worldSize / 2;
@@ -395,13 +391,10 @@ socket.on('explosion', ({ x, y, color }) => {
 });
 
 socket.on('death', (data = {}) => {
-  statusEl.textContent = data.killer ? `Killed by ${data.killer}` : 'You died';
   joinBox.style.display = 'grid';
   joined = false;
   playerId = null;
   beep('death');
-  scoreEl.textContent = 'Score: 0';
-  lengthEl.textContent = 'Length: 10';
 });
 function drawGrid() {
   ctx.save();
@@ -825,8 +818,6 @@ function render(now = performance.now()) {
     socket.emit('input', { angle: targetAngle, boost });
     lastInputSent = current;
   }
-
-  if (onlineEl) onlineEl.textContent = `Online: ${onlineCount} | Best: ${bestScore}`;
   requestAnimationFrame(render);
 }
 
