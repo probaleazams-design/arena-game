@@ -770,19 +770,19 @@ function drawMiniMap() {
 }
  
 function updateLeaderboard() {
-  if (!leaderboardEl) return;
+    if (!leaderboardEl) return;
 
-  const totalPlayers = Array.isArray(state.players)
-    ? state.players.length
-    : 0;
+    const totalPlayers = Array.isArray(state.players)
+        ? state.players.length
+        : 0;
 
-  leaderboardEl.innerHTML = `
-    <div style="font-size:16px;font-weight:bold;margin-bottom:8px;">
-      Players Online
-    </div>
+    leaderboardEl.innerHTML = `
+        <div style="font-size:16px;font-weight:bold;margin-bottom:8px;">
+            Players Online
+        </div>
 
-    <div>Total Players: ${totalPlayers}</div>
-  `;
+        <div>Total Players: ${totalPlayers}</div>
+    `;
 }
 
 function render(now = performance.now()) {
