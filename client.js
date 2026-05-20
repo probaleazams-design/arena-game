@@ -47,6 +47,7 @@ let joined = false;
 let particles = [];
 let lastInputSent = 0;
 let onlineCount = 0;
+let leaderboardData = [];
 let bestScore = Number(localStorage.getItem('arena_bestScore') || 0);
 let soundUnlocked = false;
 let audioCtx = null;
@@ -347,7 +348,10 @@ socket.on('state', (serverState) => {
     timestamp: serverState?.timestamp || 0
   };
 
-  onlineCount = state.players.length;
+onlineCount = serverState?.onlineCount || state.players.length;
+leaderboardData = Array.isArray(serverState?.leaderboard)
+  ? serverState.leaderboard
+  : [];
   if (onlineEl) onlineEl.textContent = `Online: ${onlineCount}`;
 
   const me = state.players.find(p => p.id === playerId);
@@ -745,22 +749,18 @@ function drawMiniMap() {
 
   ctx.restore();
 }
+ 
 function updateLeaderboard() {
   if (!leaderboardEl) return;
 
-  const players = Array.isArray(state.players) ? state.players : [];
-  const sorted = [...players]
-    .sort((a, b) => (b.score || 0) - (a.score || 0))
-    .slice(0, 5);
+  const html = leaderboardData
+    .slice(0, 10)
+    .map((p, i) => {
+      return `<div>${i + 1}. ${p.name} - ${p.score}</div>`;
+    })
+    .join('');
 
-  leaderboardEl.innerHTML = `
-    <div style="font-weight:bold;margin-bottom:6px;">Leaderboard</div>
-    ${sorted.map((p, i) => {
-      const name = String(p.name || 'Player').slice(0, 12);
-      return `<div class="${p.id === playerId ? 'me' : ''}" style="margin:3px 0;font-size:12px;color:${p.id === playerId ? '#f5c542' : '#fff'}">${i + 1}. ${name}: ${p.score || 0}</div>`;
-    }).join('')}
-    <div style="margin-top:8px;font-size:11px;opacity:0.7;">Best: ${bestScore}</div>
-  `;
+  leaderboardEl.innerHTML = html;
 }
 
 function render(now = performance.now()) {

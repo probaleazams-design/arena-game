@@ -22,11 +22,12 @@ const io = new Server(httpServer, {
 const TICK_RATE = 60;
 const WORLD_SIZE = 4000;
 const GRID_SIZE = 200;
+const FOOD_TARGET = 300;
 const VIEW_DISTANCE = 800;
 const PLAYER_RADIUS = 12;
 const FOOD_RADIUS = 20;
 const BODY_SKIP = 4;
-const FOOD_TARGET = 500;
+const LEADERBOARD_LIMIT = 10;
 
 const gameState = {
   players: new Map(),
@@ -58,16 +59,62 @@ function normalizeAngle(a) {
   return a;
 }
 
+const FOOD_TIERS = [
+  { type: 'cherry', value: 1, weight: 40 },
+  { type: 'donut', value: 2, weight: 28 },
+  { type: 'candy', value: 3, weight: 18 },
+  { type: 'cake', value: 4, weight: 10 },
+  { type: 'orb', value: 5, weight: 4 }
+];
+
+function pickFoodTier() {
+  const total = FOOD_TIERS.reduce((sum, t) => sum + t.weight, 0);
+
+  let roll = Math.random() * total;
+
+  for (const tier of FOOD_TIERS) {
+    roll -= tier.weight;
+
+    if (roll <= 0) {
+      return tier;
+    }
+  }
+
+  return FOOD_TIERS[0];
+}
+
+function makeFood(x, y) {
+  const tier = pickFoodTier();
+
+  return {
+    id: randomUUID(),
+    x,
+    y,
+    type: tier.type,
+    value: tier.value
+  };
+}
+
 function spawnFood() {
   while (gameState.foods.length < FOOD_TARGET) {
-    gameState.foods.push({
-      id: randomUUID(),
-      x: Math.random() * WORLD_SIZE,
-      y: Math.random() * WORLD_SIZE,
-      type: ['cherry', 'donut', 'candy', 'cake', 'orb'][Math.floor(Math.random() * 5)],
-      value: 10 + Math.floor(Math.random() * 20)
-    });
+    gameState.foods.push(
+      makeFood(
+        Math.random() * WORLD_SIZE,
+        Math.random() * WORLD_SIZE
+      )
+    );
   }
+}
+function getLeaderboard() {
+  return [...gameState.players.values()]
+    .filter(p => p.alive)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, LEADERBOARD_LIMIT)
+    .map(p => ({
+      id: p.id,
+      name: p.name,
+      score: p.score
+    }));
 }
 
 function pointCollidesWithBody(px, py, body, startIndex = 0) {
@@ -391,6 +438,8 @@ setInterval(() => {
     io.to(player.id).emit('state', {
       players: nearbyPlayers,
       foods: nearbyFood,
+      onlineCount: gameState.players.size,
+      leaderboard: getLeaderboard(),
       timestamp: Date.now()
     });
   });
