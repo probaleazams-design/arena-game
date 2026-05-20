@@ -37,6 +37,13 @@ const JOYSTICK_DEADZONE = 8;
 
 let W = window.innerWidth;
 let H = window.innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+});
 let playerId = null;
 let worldSize = 4000;
 let state = { players: [], foods: [], timestamp: 0 };
