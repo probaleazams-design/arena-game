@@ -37,13 +37,25 @@ const JOYSTICK_DEADZONE = 8;
 
 let W = window.innerWidth;
 let H = window.innerHeight;
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+
+canvas.width = window.innerWidth * DPR;
+canvas.height = window.innerHeight * DPR;
+
+canvas.style.width = window.innerWidth + 'px';
+canvas.style.height = window.innerHeight + 'px';
+
+ctx.scale(DPR, DPR);
 
 window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth * DPR;
+  canvas.height = window.innerHeight * DPR;
+
+  canvas.style.width = window.innerWidth + 'px';
+  canvas.style.height = window.innerHeight + 'px';
+
+  ctx.scale(DPR, DPR);
 });
+
 let playerId = null;
 let worldSize = 4000;
 let state = { players: [], foods: [], timestamp: 0 };
