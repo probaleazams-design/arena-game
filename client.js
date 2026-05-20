@@ -770,19 +770,36 @@ function drawMiniMap() {
 }
  
 function updateLeaderboard() {
-    if (!leaderboardEl) return;
+  if (!leaderboardEl) return;
 
-    const totalPlayers = Array.isArray(state.players)
-        ? state.players.length
-        : 0;
+  const players = Array.isArray(state.players)
+    ? [...state.players]
+    : [];
 
-    leaderboardEl.innerHTML = `
-        <div style="font-size:16px;font-weight:bold;margin-bottom:8px;">
-            Players Online
-        </div>
+  players.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-        <div>Total Players: ${totalPlayers}</div>
-    `;
+  const topPlayers = players.slice(0, 10);
+
+  leaderboardEl.innerHTML = `
+    <div style="
+      font-size:18px;
+      font-weight:bold;
+      margin-bottom:10px;
+    ">
+      Top Players
+    </div>
+
+    ${topPlayers.map((p, i) => `
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        margin-bottom:6px;
+      ">
+        <span>${i + 1}. ${p.name || "Player"}</span>
+        <span>${p.score || 0}</span>
+      </div>
+    `).join("")}
+  `;
 }
 
 function render(now = performance.now()) {
