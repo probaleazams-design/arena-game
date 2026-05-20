@@ -772,17 +772,16 @@ function drawMiniMap() {
 function updateLeaderboard() {
   if (!leaderboardEl) return;
 
-  const me = state.players.find(p => p.id === playerId);
-
-  if (!me) {
-    leaderboardEl.innerHTML = '';
-    return;
-  }
+  const totalPlayers = Array.isArray(state.players)
+    ? state.players.length
+    : 0;
 
   leaderboardEl.innerHTML = `
-    <div>In game</div>
-    <div>Score: ${me.score || 0}</div>
-    <div>Length: ${me.length || 10}</div>
+    <div style="font-size:16px;font-weight:bold;margin-bottom:8px;">
+      Players Online
+    </div>
+
+    <div>Total Players: ${totalPlayers}</div>
   `;
 }
 
