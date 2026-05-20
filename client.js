@@ -9,10 +9,6 @@ const socket = io("https://arena-game-sqxr.onrender.com", {
 
 const canvas = document.getElementById('game');
 const ctx = canvas?.getContext('2d', { alpha: false, desynchronized: true });
-
-const statusEl = document.getElementById('status');
-const scoreEl = document.getElementById('score');
-const lengthEl = document.getElementById('length');
 const joinBox = document.getElementById('joinBox');
 const joinBtn = document.getElementById('joinBtn');
 const nameInput = document.getElementById('name');
@@ -20,7 +16,7 @@ const skinSelect = document.getElementById('skin');
 const leaderboardEl = document.getElementById('leaderboard');
 const onlineEl = document.getElementById('online');
 
-if (!canvas || !ctx || !statusEl || !scoreEl || !lengthEl || !joinBox || !joinBtn || !nameInput || !skinSelect) {
+if (!canvas || !ctx || !joinBox || !joinBtn || !nameInput || !skinSelect || !leaderboardEl) {
   throw new Error('Missing required DOM elements');
 }
 
