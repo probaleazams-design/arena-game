@@ -366,14 +366,13 @@ onlineCount = serverState?.onlineCount || state.players.length;
 leaderboardData = Array.isArray(serverState?.leaderboard)
   ? serverState.leaderboard
   : [];
-  if (onlineEl) onlineEl.textContent = `Online: ${onlineCount}`;
+  
 
   const me = state.players.find(p => p.id === playerId);
   if (me) {
     const score = me.score ?? 0;
     const length = me.length ?? me.body?.length ?? 0;
-    scoreEl.textContent = `Score: ${score}`;
-    lengthEl.textContent = `Length: ${length}`;
+  
 
     if (score > bestScore) {
       bestScore = score;
