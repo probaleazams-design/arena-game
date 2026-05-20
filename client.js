@@ -419,54 +419,210 @@ function drawFood(food) {
   ctx.fillText(emoji, p.x, p.y);
 }
 
+function clamp01(v) {
+  return v < 0 ? 0 : v > 1 ? 1 : v;
+}
+
+function bodyPointOffset(prev, cur, next, t) {
+  const x1 = prev ? prev.x : cur.x;
+  const y1 = prev ? prev.y : cur.y;
+  const x2 = next ? next.x : cur.x;
+  const y2 = next ? next.y : cur.y;
+
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = -dy / len;
+  const ny = dx / len;
+
+  const sway = Math.sin(t) * 0.9;
+  return { ox: nx * sway, oy: ny * sway };
+}
+
+function drawHeadEyes(x, y, angle, glowColor) {
+  const eyeDist = 4.6;
+  const eyeForward = 5.5;
+
+  const ex = Math.cos(angle);
+  const ey = Math.sin(angle);
+  const px = -ey;
+  const py = ex;
+
+  const leftX = x + ex * eyeForward + px * eyeDist;
+  const leftY = y + ey * eyeForward + py * eyeDist;
+  const rightX = x + ex * eyeForward - px * eyeDist;
+  const rightY = y + ey * eyeForward - py * eyeDist;
+
+  ctx.save();
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.beginPath();
+  ctx.arc(leftX, leftY, 1.7, 0, Math.PI * 2);
+  ctx.arc(rightX, rightY, 1.7, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = glowColor;
+  ctx.beginPath();
+  ctx.arc(leftX + 0.35, leftY + 0.15, 0.7, 0, Math.PI * 2);
+  ctx.arc(rightX + 0.35, rightY + 0.15, 0.7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
 function drawSnake(player) {
   if (!player?.body?.length) return;
 
-  const head = worldToScreen(player.body[0].x, player.body[0].y);
-  if (Math.abs(head.x - W / 2) > RENDER_DISTANCE || Math.abs(head.y - H / 2) > RENDER_DISTANCE) return;
+  const body = player.body;
+  const headWorld = body[0];
+  const headScreen = worldToScreen(headWorld.x, headWorld.y);
 
-  const color = skinColor(player.skin);
+  if (
+    headScreen.x < -RENDER_DISTANCE ||
+    headScreen.x > W + RENDER_DISTANCE ||
+    headScreen.y < -RENDER_DISTANCE ||
+    headScreen.y > H + RENDER_DISTANCE
+  ) return;
+
   const isMe = player.id === playerId;
-  const isBoosting = !!player.boost || (isMe && boost);
+  const boosting = !!player.boost || (isMe && boost);
+  const base = skinColor(player.skin);
+  const glow = skinGlow(player.skin);
+
+  const n = body.length;
+  const maxVisible = Math.min(n, 120);
+
+  let dirX = 1;
+  let dirY = 0;
+  if (n > 1) {
+    dirX = body[0].x - body[1].x;
+    dirY = body[0].y - body[1].y;
+    const dl = Math.hypot(dirX, dirY) || 1;
+    dirX /= dl;
+    dirY /= dl;
+  }
+  const headAngle = Math.atan2(dirY, dirX);
 
   ctx.save();
 
-  if (isMe || isBoosting) {
-    ctx.shadowBlur = isBoosting ? 25 : 15;
-    ctx.shadowColor = skinGlow(player.skin);
+  if (isMe || boosting) {
+    ctx.shadowColor = glow;
+    ctx.shadowBlur = boosting ? 22 : 14;
   }
 
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineWidth = 16;
-  ctx.strokeStyle = color;
+  const grad = ctx.createLinearGradient(
+    headScreen.x - 10,
+    headScreen.y - 10,
+    headScreen.x + 10,
+    headScreen.y + 10
+  );
+  grad.addColorStop(0, boosting ? '#ffffff' : base);
+  grad.addColorStop(0.5, base);
+  grad.addColorStop(1, 'rgba(255,255,255,0.92)');
 
-  ctx.beginPath();
-  for (let i = 0; i < player.body.length; i++) {
-    const seg = player.body[i];
+  let prevP = null;
+
+  for (let i = maxVisible - 1; i >= 0; i--) {
+    const seg = body[i];
     const p = worldToScreen(seg.x, seg.y);
-    if (i === 0) ctx.moveTo(p.x, p.y);
-    else ctx.lineTo(p.x, p.y);
-  }
-  ctx.stroke();
 
-  ctx.shadowBlur = isBoosting ? 30 : 20;
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(head.x, head.y, 12, 0, Math.PI * 2);
-  ctx.fill();
+    if (p.x < -80 || p.x > W + 80 || p.y < -80 || p.y > H + 80) {
+      continue;
+    }
+
+    const t = i / Math.max(1, maxVisible - 1);
+    const thickness = lerp(16, 6.5, t);
+    const alpha = 1 - t * 0.32;
+    const wobble = i === 0 ? Math.sin(performance.now() * 0.015) * 0.6 : 0;
+
+    ctx.globalAlpha = alpha;
+
+    if (i === 0) {
+      const pulse = boosting ? 1.35 : 1;
+      const headR = 11.5 * pulse;
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, headR, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = boosting ? 0.55 : 0.38;
+      ctx.strokeStyle = glow;
+      ctx.lineWidth = boosting ? 7 : 5;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, headR + 2.5, 0, Math.PI * 2);
+      ctx.stroke();
+
+      drawHeadEyes(p.x, p.y, headAngle, glow);
+
+      if (boosting) {
+        ctx.globalAlpha = 0.22;
+        ctx.strokeStyle = glow;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(p.x - dirX * 4, p.y - dirY * 4);
+        ctx.lineTo(p.x - dirX * 16, p.y - dirY * 16);
+        ctx.stroke();
+      }
+    } else {
+      const prev = body[i - 1];
+      const next = body[i + 1];
+      const off = bodyPointOffset(prev, seg, next, performance.now() * 0.004 + i * 0.12);
+
+      const sx = p.x + off.ox;
+      const sy = p.y + off.oy;
+
+      const prevScreen = prevP || worldToScreen(prev.x, prev.y);
+      const dx = sx - prevScreen.x;
+      const dy = sy - prevScreen.y;
+      const segLen = Math.hypot(dx, dy) || 1;
+      const nx = -dy / segLen;
+      const ny = dx / segLen;
+
+      const bodyColor = i % 2 === 0 ? 'rgba(255,255,255,0.90)' : 'rgba(255,255,255,0.80)';
+      const rimAlpha = clamp01(0.24 - t * 0.12);
+
+      ctx.fillStyle = bodyColor;
+      ctx.beginPath();
+      ctx.arc(sx, sy, thickness * 0.5 + wobble, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = rimAlpha;
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(sx + nx * 1.2, sy + ny * 1.2, thickness * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+
+      prevP = { x: sx, y: sy };
+    }
+  }
+
+  if (maxVisible > 1) {
+    ctx.globalAlpha = boosting ? 0.18 : 0.11;
+    ctx.strokeStyle = glow;
+    ctx.lineWidth = boosting ? 8 : 6;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+
+    for (let i = 0; i < Math.min(maxVisible, 18); i++) {
+      const seg = body[i];
+      const p = worldToScreen(seg.x, seg.y);
+      if (i === 0) ctx.moveTo(p.x, p.y);
+      else ctx.lineTo(p.x, p.y);
+    }
+    ctx.stroke();
+  }
 
   if (!isMe) {
+    ctx.globalAlpha = 1;
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 11px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(player.name || 'Player', head.x, head.y - 24);
+    ctx.fillText(player.name || 'Player', headScreen.x, headScreen.y - 24);
   }
 
   ctx.restore();
 }
-
 function drawParticles() {
   ctx.save();
   for (const p of particles) {
