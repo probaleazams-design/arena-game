@@ -14,7 +14,6 @@ const joinBtn = document.getElementById('joinBtn');
 const nameInput = document.getElementById('name');
 const skinSelect = document.getElementById('skin');
 const leaderboardEl = document.getElementById('leaderboard');
-const onlineEl = document.getElementById('online');
 
 if (!canvas || !ctx || !joinBox || !joinBtn || !nameInput || !skinSelect || !leaderboardEl) {
   throw new Error('Missing required DOM elements');
